@@ -1,10 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react'
 import moment from 'moment';
+import { useNavigate } from 'react-router-dom';
 
 export default function InstaPay() {
+    const navigate =useNavigate();
     const amountInput = useRef();
     const[userInfo,SetUserInfo] = useState({
-        name:'Hend Soliman',
+    name:'Hend Soliman',
     });
     const [balance,SetBalanc] = useState(0);
     const[transaction,SetTransaction]=useState([]);
@@ -12,12 +14,12 @@ export default function InstaPay() {
     const[showBalance, SetShowBalance] = useState(false);
     const [Showtransaction,SetShowTransaction] = useState(false)
     const toggelBalance = ()=>{
-        showBalance ? SetShowBalance (false) :  SetShowBalance(true);
+    showBalance ? SetShowBalance (false) :  SetShowBalance(true);
     }
 
     const DepositAmount = ()=>{
-         let amount = +amountInput.current.value ;
-         let newBalance = balance + amount ;
+        let amount = +amountInput.current.value ;
+        let newBalance = balance + amount ;
    
         let time = moment().format('YYYY-MM-DD / hh:mm:ss A')
         let newTransaction = {  
@@ -30,16 +32,16 @@ export default function InstaPay() {
       let copy = [...transaction , newTransaction];
        localStorage.setItem('balance',newBalance);
        localStorage.setItem('transaction',JSON.stringify(copy));
-      SetTransaction(copy);
-         SetBalanc(newBalance);
-         amountInput.current.value = "";
+       SetTransaction(copy);
+       SetBalanc(newBalance);
+       amountInput.current.value = "";
 
     };
     const WithdrawAmount = ()=>{
-          let amount = +amountInput.current.value ;
-          if(amount <= balance ){
+        let amount = +amountInput.current.value ;
+        if(amount <= balance ){
         let newBalance = balance - amount ;
-        let time = moment().format('YYY-MM-DD / hh:mm:ss A')
+        let time = moment().format('YYYY-MM-DD / hh:mm:ss A')
         let newTransaction = {  
         BeforBalance: balance, 
         amount: amount, 
@@ -47,40 +49,51 @@ export default function InstaPay() {
         AfterBalance: newBalance, 
         date:time, 
       };
-      let copy = [...transaction , newTransaction];
+       let copy = [...transaction , newTransaction];
        localStorage.setItem('balance',newBalance);
        localStorage.setItem('transaction',JSON.stringify(copy));
-      SetTransaction(copy);
-        SetBalanc(newBalance);
-       
-             amountInput.current.value = "";
-          }else{
+       SetTransaction(copy);
+       SetBalanc(newBalance);
+       amountInput.current.value = "";
+        }else{
             alert('Not Impossible');
           }
           }
 
         useEffect(()=>{
+            let hasLogged = sessionStorage.getItem('hasLogged') || localStorage.getItem('hasLogged');
+            if(hasLogged === 'true'){
             let balanceFromLocalstorage = localStorage.getItem('balance') || 0;
             let transactionsFromLocalstorage = JSON.parse(localStorage.getItem('transaction')) || [] ;
             SetBalanc(balanceFromLocalstorage);
             SetTransaction(transactionsFromLocalstorage);
 
+            }else{
+            navigate ('/login');
+            }
         },[])
+          const handelLogout = () => {
+                sessionStorage.removeItem('hasLogged') || localStorage.removeItem('hasLogged');
+                navigate('/login');
+            }
 
   return (
     <div className='w-full h-dvh overflow-auto text-amber-50'>
         <div className='container p-4 gap-3 flex flex-col'>
         <h1>welcom : {userInfo.name}</h1>
+        
         <p>Balance :{showBalance ? balance : '*****'}</p>
         <div className='flex flex-wrap gap-3 items-center'>
-            <button onClick={()=>SetShowTransaction(true)} className='btn btn-dark'>show transaction</button>
+        <button onClick={()=>SetShowTransaction(true)} className='btn btn-dark'>show transaction</button>
         <button className={ showBalance ? 'btn btn-warning' : 'btn btn-primary' } onClick={toggelBalance}>{showBalance ? 'hide Balance' :'show Balance'}</button>
+        <button className='btn btn-error' onClick={handelLogout}>Log Out</button>
         {
-            showBalance && (
-                  <div className='w-full flex gap-3'>
+        showBalance && (
+        <div className='w-full flex gap-3'>
         <input ref={amountInput} className='input' placeholder='Enter Amount'></input>
         <button className='btn btn-success' onClick={DepositAmount}>Deposit</button>
         <button className='btn btn-error' onClick={WithdrawAmount}>Withdrow</button>
+        
         </div>
         )}
         {Showtransaction && (
@@ -108,22 +121,12 @@ export default function InstaPay() {
                         </tr>
                         );
                     })}
-                </tbody>
-                        
-                       
+                </tbody>         
             </table>
             )
-
-            
-   
-        
-      
         )}
-        
-      
         </div>
         </div>
-
     </div>
   )
 }
